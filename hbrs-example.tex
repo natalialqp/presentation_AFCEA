@@ -1,0 +1,957 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{ragged2e}  % `\justifying` text
+\usepackage{booktabs}  % Tables
+\usepackage{tabularx}
+\usepackage{tikz}      % Diagrams
+\usetheme{EastLansing}
+\usepackage{animate}
+\usetikzlibrary{calc, shapes, backgrounds}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{url}       % `\url
+\usepackage{listings}  % Code listings
+\usepackage[T1]{fontenc}
+\usepackage{biblatex}
+\usepackage{multirow}
+\usepackage{multimedia}
+\usepackage{caption}
+\usepackage{subcaption}
+\long\def\/*#1*/{}
+\usepackage{lipsum}
+
+\newcommand\blfootnote[1]{%
+	\begingroup
+	\renewcommand\thefootnote{}\footnote{#1}%
+	\addtocounter{footnote}{-1}%
+	\endgroup
+}
+\renewcommand{\footnotesize}{\fontsize{6pt}{1pt}}
+
+
+\usepackage{theme/beamerthemehbrs}
+
+\author[Natalia Quiroga]{Natalia Quiroga Perez}
+
+\title[Experience-Based Path Planning Framework for Real-Time LfD]{Experience-Based Path Planning Framework for Real-Time Learning from Demonstration}
+\thirdpartylogo{theme/images/migrave_logo_large.png}
+
+%\subtitle{Subtitle of presentation}
+\institute[HBRS]{Hochschule Bonn-Rhein-Sieg}
+\date{\today}
+\subject{Test beamer}
+
+% leave the value of this argument empty if the advisors
+% should not be included on the title slide
+\def\advisors{Prof. Dr. Teena Chakkalayil Hassan \\ Prof. Dr. Paul G. Plöger\\ Dr. Alex Mitrevski \\}
+
+\begin{document}
+{
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+ \begin{frame}{Introduction}
+	\begin{minipage}{0.5\linewidth}
+	\begin{itemize}
+		\item Approximately 1 in 100 children are affected by autism [1]
+		\newline
+		\item Robots have a \textcolor{hbrsblue}{\textbf{positive impact}} in autistic people
+		\newline
+		\item The end users are \textcolor{hbrsblue}{\textbf{patients}} and \textcolor{hbrsblue}{\textbf{therapists}}
+	\end{itemize}
+\end{minipage}\hfill	
+\begin{minipage}{0.5\linewidth}
+	\begin{figure}[tp]
+		\centering
+		\includegraphics[width=0.7\textwidth]{images/robot-for-autism-increasing-joint-attention.jpg}
+		\caption{Therapy session with QTrobot [2]}
+		\label{fig:robot-for-autism-increasing-joint-attention}
+	\end{figure}	
+\end{minipage}
+
+\vspace{-0.5cm}
+\blfootnote{[1] World Health Organization. Available at: https://www.who.int/news-room/fact-sheets/}
+%https://www.who.int/news-room/fact-sheets/detail/autism-spectrum-disorders
+\blfootnote{[2] QTrobot for Special Needs Education (2023) LuxAI S.A. Available at: https://luxai.com/}
+\end{frame}
+
+\begin{frame}{Motivation}
+	\begin{itemize}
+		\item \textcolor{hbrsblue}{\textbf{Robot-assisted therapy}} encourages patients to learn movements and body language
+		\newline
+		\item Imitation games are performed with robots, where movements are programmed individually
+		\newline
+		\item \textcolor{hbrsblue}{\textbf{Therapists}} might choose traditional methods if new technologies are complex [2] \blfootnote{[2] Roman Kulikovskiy, et al. Can therapists design robot-mediated interventions and teleoperate robots using vr to deliver interventions for asd? In 2021 IEEE International Conference on Robotics and Automation (ICRA), pages 3669–3676. IEEE, 2021}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Goal}
+	\begin{itemize}
+		\item Replicate movements directly from human-skeleton data, to perform learning in an efficient, fast and friendly way for the end user
+		\newline
+		\item Apply \textcolor{hbrsblue}{\textbf{Learning from Demonstration (LfD)}} in order to learn motions with minimal number of demonstration and reduced risk\footnote{Minimum amount of collisions and damages}
+		\newline
+		\item Increase the limited robot's behavioral repertory for the long term therapy
+		
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Problem Statement}
+\begin{minipage}{0.49\linewidth}
+	\centering
+	\textcolor{hbrsblue}{\textbf{Approaches used in Therapy}}
+	\newline
+	\begin{itemize}
+		\item \textcolor{hbrsblue}{\textbf{Existing systems}} [3, 4] use external equipment to replicate moves which makes them more complex
+		\newline
+		\item \textcolor{hbrsblue}{\textbf{Teleoperated systems}} [2, 5], where the movements are not learned but just performed in each session
+	\end{itemize}
+\end{minipage}\hfill	
+\begin{minipage}{0.49\linewidth}
+	\centering
+	\textcolor{hbrsblue}{\textbf{Learning from Demonstration Difficulties}}
+	\begin{itemize}
+		\item Number of demonstrations
+		\newline
+		\item Embodiment differences between human and robots
+		\newline
+		\item Selection of relevant parts of the demonstration
+	\end{itemize}
+\end{minipage}
+\blfootnote{[3] Jiang Hua, et al. Learning for a robot: Deep reinforcement learning, imitation learning, transfer learning. Sensors, 21 (4):1278, Feb 2021}
+\blfootnote{[4] Jonas Koenemann and Maren Bennewitz. Whole-body imitation of human motions with a nao humanoid. Mar 2012}
+\blfootnote{[5] Md Assad-Uz-Zaman, et al. Kinect controlled nao robot for telerehabilitation. Journal of Intelligent Systems, 30(1):224–239, 2020}
+\end{frame}	
+
+\begin{frame}{State of the Art}
+	\framesubtitle{Comparison with Existent Frameworks}
+	%https://table.6cm.co/
+	\vspace{-0.5cm}
+	\begin{table}[!b]
+		\small
+		\begin{tabular}{||m{1.7cm}|m{2.5cm}|m{2.9cm}|m{2.2cm}|m{1cm}|m{1cm}||}
+			\hline
+			\multirow{2}{*}{\textbf{Framework}} & \multirow{2}{*}{\textbf{Retrieve-Repair}} & \multirow{2}{*}{\textbf{Search}}  & \multirow{2}{*}{\textbf{Average time}\footnote{Average time of insertion for a new path}} & \multicolumn{2}{l||}{\textbf{Memory}} \\ \cline{5-6} 
+			&      &      &      & \textbf{kB} & \textbf{States} \\ \hline \hline
+			\textbf{Lightning [6]} & Library manager & Bidirectional Rapidly-exploring Random Trees (BiRRTs) & \textcolor{hbrsblue}{\textbf{13 ms}} & 19 373 & 58 425  \\ \hline
+			\textbf{Thunder [7]} & Roadmap & Nearest Neighbours (NN) and A* search & 1410 ms & \textcolor{hbrsblue}{\textbf{235}} & \textcolor{hbrsblue}{\textbf{621}}  \\ \hline
+		\end{tabular}
+	\end{table}
+\blfootnote{[6] Dmitry Berenson, et al. A robot path planning framework that learns from experience. In International Conference on Robotics and Automation, pages 3671–3678. IEEE, 2012}
+\blfootnote{[7] David Coleman, et al. Experience-based planning with sparse roadmap spanners. In International Conference on Robotics and Automation (ICRA), pages 900–905.IEEE, 2015}
+\end{frame}
+
+\frame{
+	\frametitle{Learning from Demonstration Offline}
+	\framesubtitle{Generalization}
+	\begin{center}
+		\movie{\includegraphics[width=0.8\textwidth]{images/qt-spoon.png}}{videos/initial_video.mp4}
+	\end{center}
+}
+
+\begin{frame}{Graph-based Trajectory LfD}
+	\framesubtitle{Proposed solution}
+	\begin{figure}[tp]
+		\centering
+		\includegraphics[width=0.9\textwidth]{images/framework_overview.pdf}
+		\vspace{-0.4cm}
+		\caption{Learning from demonstration framework overview}
+		\label{fig:framework_overview}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Graph-based Trajectory LfD}
+	\framesubtitle{Proposed solution}
+	\begin{figure}[tp]
+		\centering
+		\includegraphics[width=0.9\textwidth]{images/framework_overview_mapping.pdf}
+		\vspace{-0.4cm}
+		\caption{Learning from demonstration framework overview}
+		\label{fig:framework_overview}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Robot Representation}
+	\framesubtitle{Human Skeleton Joints to Robot Angular Positions Mapping}
+	\begin{minipage}{0.33\linewidth}
+		\vspace{-0.8em}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.85\textwidth]{images/human_skeleton.png}
+			\caption{Human Skeleton by Nuitrack [8]}
+		\end{figure}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.33\linewidth}
+		\vspace{-2em}
+		Calculate the Spherical angles of human skeleton: 
+		
+		\centering
+		$\theta = \arctan \frac{y}{x}$ \\
+		\centering
+		$\phi = \frac{\sqrt{(x^2 + y^2)}}{z}$ \\ \hfill
+
+		For the whole skeleton at time $t$: 
+		\hfill
+		\hfill
+		
+		\centering
+		$\vec \Theta^H_t = \{\theta^1_t,...,\theta^k_t\}$ \\
+		\centering
+		$\vec \Phi^H_t = \{\phi^1_t,...,\phi^k_t\}$ \\
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.3\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.91\textwidth]{images/freddy_joint_references.pdf}
+			\vspace{-0.5em}
+			\caption{Joint representation of Freddy with one arm}
+		\end{figure}
+	\end{minipage}
+	\vspace{-0.8em}
+	 \blfootnote{[8] https://nuitrack.com/}
+\end{frame}
+
+\begin{frame}{Pose Learning}
+	\framesubtitle{Neural Network Model}
+	\begin{minipage}{0.5\linewidth}
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=1.1\textwidth]{images/pose_estimation_nn.pdf}
+			\label{fig:nao_initial}
+		\end{figure}
+	\end{minipage}\hfill	
+	\begin{minipage}{0.5\linewidth}	
+		\vspace{-2.5em}
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.7\textwidth]{images/qt-spoon.png}
+			\label{fig:simulation_teapot}
+		\end{figure}
+		\vspace{-0.5cm}
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.7\textwidth]{images/freddy_pose.png}
+			\label{fig:freddy_pose}
+		\end{figure}
+		\vspace{-0.5cm}
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.7\textwidth]{images/nao_pose.png}
+			\label{fig:nao_initial}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Graph-based Trajectory LfD}
+	\framesubtitle{Proposed solution}
+	\begin{figure}[tp]
+		\centering
+		\includegraphics[width=0.9\textwidth]{images/framework_overview_exploration.pdf}
+		\vspace{-0.4cm}
+		\caption{Learning from demonstration framework overview}
+		\label{fig:framework_overview}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{World vs. Robot Graphs}
+	\framesubtitle{Exploration}
+	\begin{minipage}{0.4\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/world.png}
+			\caption{World representation as graph with $d_{min}$ between nodes of 10 mm}
+			\label{fig:world}
+		\end{figure}
+	\end{minipage}\hfill	
+	\begin{minipage}{0.6\linewidth}
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/graph_representation.pdf}
+			\caption{Joint $i$ representation as Graph}
+			\label{fig:world_small}
+		\end{figure}	
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Motor Babbling}
+	\framesubtitle{Inspiration}
+	\begin{minipage}{0.5\linewidth}
+		\vspace{-0.5cm}
+		\begin{itemize}
+			\item Random exploration based on the method used by \textcolor{hbrsblue}{\textbf{human infants}} for the acquisition of \textcolor{hbrsblue}{\textbf{proprioception}}	
+			\newline
+			\item Individual babbling for each manipulator, namely arms and head, ensuring \textcolor{hbrsblue}{\textbf{fully connected initial graphs}}
+		\end{itemize}
+	\end{minipage}\hfill
+	\begin{minipage}{0.5\linewidth}
+		\begin{center}
+			\movie{\includegraphics[width=0.8\textwidth]{images/funny_baby.png}}{videos/funny_baby.mp4}
+		\end{center}	
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Motor Babbling \& Torque Control}
+	\begin{minipage}{0.42\linewidth}
+		\begin{itemize}
+			\item Random direction \textcolor{hbrsblue}{\textbf{$\Delta \alpha$}} from previous position:
+			\begin{itemize}
+				\item Safer method
+				\item Slower with increasing DOF
+				\item Centralized motions
+			\end{itemize}
+			\hfill
+			
+			\item Random angular position between limits:
+			\begin{itemize}
+				\item Faster exploration
+				\item Wide motion range
+				\item Higher chances of collision
+				\item Angle interpolation required
+			\end{itemize}
+		\end{itemize}
+	\end{minipage}	
+	\begin{minipage}{0.28\linewidth}	
+		\begin{itemize}
+			\item Joint torque in between the limits: \textcolor{hbrsblue}{$\tau_{i_{min}} \leq \tau_i \leq \tau_{i_{max}}$}
+			\newline
+			\item If \textcolor{hbrsblue}{$\tau_i$} out of range, a force has been detected
+			\newline
+			\item Move the robot in the opposite direction of the collision
+		\end{itemize}
+	\end{minipage}	
+	\begin{minipage}{0.28\linewidth}
+		\begin{figure}[h!]
+			\includegraphics[width=0.8\textwidth]{images/torque_control.png}
+			\caption{Babbling direction}
+			\label{fig:qt_joint_references}
+		\end{figure}
+		
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Path Planning}
+	\begin{minipage}{0.25\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.95\textwidth]{images/trajectory.pdf}
+			\caption{Demonstration on the initial graph}
+			\label{fig:Path_on_graph}
+		\end{figure}
+	\end{minipage}\hfill
+	\begin{minipage}{0.25\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.95\textwidth]{images/distances_to_trajectory.pdf}
+			\caption{Path distance to the graph}
+			\label{fig:distances_to_graph}
+		\end{figure}
+	\end{minipage}\hfill		
+	\begin{minipage}{0.25\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/new_nodes_edges.pdf}
+			\caption{Candidate nodes to complete the path}
+			\label{fig:node_candidates}
+		\end{figure}
+	\end{minipage}\hfill
+	\begin{minipage}{0.25\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/node_trajectory.pdf}
+			\caption{Path with new nodes before smoothing}
+			\label{fig:new_nodes}
+		\end{figure}
+	\end{minipage}		
+\end{frame}
+
+\begin{frame}{Environment Exploration}
+	\framesubtitle{Gauss-Newton Minimization}
+	\vspace{-0.5cm}
+	\begin{minipage}{\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.75\textwidth]{images/graphs_results/gauss-newton.pdf}
+			\label{fig:object_representation}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+
+\begin{frame}{Graph Growth over Iterations}
+	\begin{minipage}{0.49\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.87\textwidth]{images/graphs_results/jointLeft_4_qt_30.png}
+			\label{fig:object_representation}
+			\vspace{-0.5em}
+			\caption{After babbling}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.49\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.84\textwidth]{images/graphs_results/jointLeft_4_qt_30_1.png}
+			\label{fig:object_representation}
+			\vspace{-0.5em}
+			\caption{After 1st iteration}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Graph-based Trajectory LfD}
+	\framesubtitle{Proposed solution}
+	\begin{figure}[tp]
+		\centering
+		\includegraphics[width=0.9\textwidth]{images/framework_overview_trajectory.pdf}
+		\vspace{-0.4cm}
+		\caption{Learning from demonstration framework overview}
+		\label{fig:framework_overview}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Trajectory Learning}
+	\framesubtitle{Gaussian Mixture Regression}
+	\begin{minipage}{0.49\linewidth}	
+	\begin{figure}[h!]
+		\includegraphics[width=0.6\textwidth]{images/gmr_git.png}
+		\caption{Gaussian Mixture Regression on \\ a single noisy signal [9]}
+	\end{figure}
+	\end{minipage}\hfill		
+	\begin{minipage}{0.49\linewidth}	
+	\begin{figure}[h!]
+		\includegraphics[width=0.6\textwidth]{images/confidence_interval.png}
+		\caption{Gaussian Mixture Regression on \\ a set of noisy signals [9]}
+	\end{figure}
+	\end{minipage}
+	\blfootnote{[9] A. Fabisch, “gmr: Gaussian mixture regression,” Journal of Open Source Software, vol. 6, no. 62, p. 3054, 2021}
+\end{frame}
+
+\begin{frame}{Obstacle Avoidance}
+	\vspace{-0.4cm}
+	\begin{figure}[h!]
+		\includegraphics[width=0.75\textwidth]{images/object_representation_02.png}
+		\label{fig:object_representation}
+		\vspace{-0.2cm}
+		\caption{Adding objects to the world (Modified from [10]) \blfootnote{[10] Smlee- (2020) Point Cloud, Everything is NORMAL. Available at: https://23min.tistory.com/8 (Accessed: 16 November 2023)}}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Experiment Description}
+	\begin{itemize}
+		\item Comparison of parameters for different babbling points: search time and graph size with $Lightning$ and $Thunder$
+		\newline
+		\item Evaluation of human-robot embodiment mapping robustness comparing the training vs. validation loss for QTrobot, NAO and Freddy
+		\newline
+		\item Comparison of parameters after inclusion of obstacles for QTrobot and NAO:
+		\begin{itemize}
+			 \item blocking the end effector
+			 \item blocking a random joint $J_{i}$ 
+			 \item the end effector and the joint $J_i$
+		 \end{itemize}\hfill
+		\item Qualitative evaluation as user preference survey. Rating trajectories and
+		smoothness of reproduction QTrobot and NAO
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Environment Exploration} 
+	\framesubtitle{Motor Babbling}
+	\begin{minipage}{\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/graphs_results/babbling_time.png}
+			\label{fig:object_representation}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Localized action by iterations}
+	\vspace{-0.7em}
+	\begin{minipage}{\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.7\textwidth]{images/graphs_results/time_it_graphs.pdf}
+			\label{fig:object_representation}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.24\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.87\textwidth]{images/graphs_results/jointLeft_4_qt_30.png}
+			\label{fig:object_representation}
+			\vspace{-0.5em}
+			\caption{After babbling}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.24\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.84\textwidth]{images/graphs_results/jointLeft_4_qt_30_1.png}
+			\label{fig:object_representation}
+			\vspace{-0.5em}
+			\caption{After 1st iteration}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.24\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.84\textwidth]{images/graphs_results/jointLeft_4_qt_30_1.png}
+			\label{fig:object_representation}
+			\vspace{-0.5em}
+			\caption{After 2nd iteration}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.24\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.84\textwidth]{images/graphs_results/jointLeft_4_qt_30_1.png}
+			\label{fig:object_representation}
+			\vspace{-0.5em}
+			\caption{After 3rd iteration}
+		\end{figure}
+	\end{minipage}		
+\end{frame}
+
+\begin{frame}{Comparison with Existing Frameworks}
+	\begin{table}[]
+		\centering
+		\resizebox{\columnwidth}{!}{
+			\begin{tabular}{|c|c|c|c|}
+				\hline
+				\textbf{Parameter} & \textbf{Thunder framework} & \textbf{Lightning framework} & \textbf{Our framework} \\ \hline
+				\textbf{Computation} & \begin{tabular}[c]{@{}c@{}}Intel i7 Linux with \\ 6 3.5GHz cores \\ and 16 GB RAM\end{tabular} & \begin{tabular}[c]{@{}c@{}}Machine with 4 \\ 3.4GHz cores and \\16 GB RAM\end{tabular} & \begin{tabular}[c]{@{}c@{}} (1\&2) Intel i7 with 6 2.20GHz\\cores, 32 GB RAM \\ (3) A2S cluster 48 Core CPUs \\128GB RAM 2x Nvidia RTX A5000 \end{tabular} \\ \hline
+				\textbf{Platform/robot} & Humanoid HRP2 & \begin{tabular}[c]{@{}c@{}}(1) Willow Garage PR2 \\ (2) 2 Surgical manipulators\\ (3) Humanoid HRP2 \end{tabular} & \begin{tabular}[c]{@{}c@{}}(1) QTrobot (Real-time)\\ (2) NAO (Physical)\\ (3) Freddy (Physical) \end{tabular} \\ \hline
+				\textbf{\begin{tabular}[c]{@{}c@{}}Total amount of \\ controlled DOF\end{tabular}} &  30 DOF & \begin{tabular}[c]{@{}c@{}}(1) 7 DOF\\ (2) 7 DOF\\ (3) 30 DOF\end{tabular} & \begin{tabular}[c]{@{}c@{}}(1) 8 DOF\\ (2) 12 DOF\\ (3) 14 DOF\end{tabular} \\ \hline
+				\textbf{Library type} & Graphs & Trajectories & Graphs/trajectories \\ \hline
+				\textbf{Search algorithm} & $A^*$ & BiRRT & $A^*$\\ \hline
+				\textbf{Stored trajectories} & - & (1) \& (2) 1000 & \begin{tabular}[c]{@{}c@{}} (1), (2) \& (3) 200\end{tabular}\\ \hline
+			\end{tabular}
+		}
+		\caption{Comparison of our framework performance and features with $Thunder$ and $Lightning$}
+		\label{tab:comparison_with_thunder_and_lightning}
+	\end{table}
+	
+\end{frame}
+
+\begin{frame}{Comparison with Existing Frameworks}
+	\begin{table}[]
+		\centering
+		\resizebox{0.9\columnwidth}{!}{
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			\textbf{Parameter} & \textbf{Thunder framework} & \textbf{Lightning framework} & \textbf{Our framework} \\ \hline
+			\textbf{Stored states/nodes} & 621 states & 58425 states for HRP2 & \begin{tabular}[c]{@{}c@{}} (1) 8477 nodes\\(2) 14197 nodes \\(3) 49973 nodes \end{tabular} \\ \hline
+			\textbf{\begin{tabular}[c]{@{}c@{}}Planning from \\ scratch time\end{tabular}} & 1.41 {[}s{]} & \begin{tabular}[c]{@{}c@{}}(1) 6.8 {[}s{]} \& 12.2 {[}s{]}\\ (2) 0.22 {[}s{]}\\ (3) 0.013 {[}s{]}\end{tabular} & \begin{tabular}[c]{@{}c@{}}(1) 0.903 [s] \\ (2) 0.917 [s]\\ (3) 1.234 [s] \end{tabular}\\ \hline
+			\textbf{\begin{tabular}[c]{@{}c@{}}Repair trajectory\\ time\end{tabular}} & - & \begin{tabular}[c]{@{}c@{}} (1) 1.46 {[}s{]} \& 0.993 {[}s{]} \\ (2) 0.084 {[}s{]}\end{tabular} & \begin{tabular}[c]{@{}c@{}}(1) 0.043 [s]\\ (2) 0.063 [s] \\ (3) 0.289 [s] \end{tabular}\\ \hline
+			\textbf{\begin{tabular}[c]{@{}c@{}}Planning time with \\ static obstacles\end{tabular}} & 0.88 {[}s{]} & \begin{tabular}[c]{@{}c@{}}-\\ -\\ 2.61 {[}s{]}\end{tabular} & \begin{tabular}[c]{@{}c@{}}(1) 0.067 [s] \\ (2) 0.168 [s]\\ - \end{tabular} \\ \hline
+		\end{tabular}
+		}
+		\caption{Comparison of our framework performance and features with $Thunder$ and $Lightning$}
+		\label{tab:comparison_with_thunder_and_lightning}
+	\end{table}
+	
+\end{frame}
+
+\begin{frame}{Human-Robot Mapping}
+\framesubtitle{Pose Learning}
+	\begin{table}[]
+	\centering
+	\resizebox{0.9\columnwidth}{!}{
+		\begin{tabular}{c|cccc|cccc|cccc|c}
+			\cline{2-13}
+			\textbf{} & \multicolumn{4}{c|}{\textbf{QTrobot}}  & \multicolumn{4}{c|}{\textbf{NAO}} & \multicolumn{4}{c|}{\textbf{Freddy}}  & \\ \hline
+			\multicolumn{1}{|c|}{\textbf{Epoch}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{1000}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{2000}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{5000}}} & \multirow{2}{*}{\textbf{10000}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{1000}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{2000}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{5000}}} & \multirow{2}{*}{\textbf{10000}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{1000}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{2000}}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{5000}}} & \multirow{2}{*}{\textbf{10000}} & \multicolumn{1}{c|}{\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Hidden \\ Neurons\end{tabular}}}} \\ \cline{1-1}
+			\multicolumn{1}{|l|}{\textbf{MSE Loss}} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} &  & \multicolumn{1}{c|}{} \\ \hline
+			\multicolumn{1}{|c|}{\textbf{Training}} & \multicolumn{1}{c|}{0.128} & \multicolumn{1}{c|}{0.106} & \multicolumn{1}{c|}{0.076}  & 0.064  & \multicolumn{1}{c|}{0.130} & \multicolumn{1}{c|}{0.105} & \multicolumn{1}{c|}{0.083} & 0.067  & \multicolumn{1}{c|}{0.130} & \multicolumn{1}{c|}{0.107} & \multicolumn{1}{c|}{0.084} & 0.067  & \multicolumn{1}{c|}{\multirow{3}{*}{\textbf{16}}} \\ \cline{1-13}
+			\multicolumn{1}{|c|}{\textbf{Validation}} & \multicolumn{1}{c|}{0.147} & \multicolumn{1}{c|}{0.141} & \multicolumn{1}{c|}{0.128} & 0.148  & \multicolumn{1}{c|}{0.143} & \multicolumn{1}{c|}{0.166} & \multicolumn{1}{c|}{0.138} & 0.113  & \multicolumn{1}{c|}{0.137} & \multicolumn{1}{c|}{0.133} & \multicolumn{1}{c|}{0.180} & 0.130  & \multicolumn{1}{c|}{} \\ \cline{1-13}
+			\multicolumn{1}{|c|}{\textbf{Time [s]}} & \multicolumn{1}{c|}{1.123} & \multicolumn{1}{c|}{2.092} & \multicolumn{1}{c|}{4.859} & 11.243 & \multicolumn{1}{c|}{1.102} & \multicolumn{1}{c|}{2.445} & \multicolumn{1}{c|}{6.142} & 12.952 & \multicolumn{1}{c|}{1.182} & \multicolumn{1}{c|}{2.311} & \multicolumn{1}{c|}{5.884} & 11.709 & \multicolumn{1}{c|}{} \\ \hline
+			\multicolumn{1}{|c|}{\textbf{Training}} & \multicolumn{1}{c|}{0.065} & \multicolumn{1}{c|}{0.047} & \multicolumn{1}{c|}{0.018} & 0.012  & \multicolumn{1}{c|}{0.065} & \multicolumn{1}{c|}{0.050} & \multicolumn{1}{c|}{0.025} & 0.011  & \multicolumn{1}{c|}{0.075} & \multicolumn{1}{c|}{0.045} & \multicolumn{1}{c|}{0.019} & 0.011  & \multicolumn{1}{c|}{\multirow{3}{*}{\textbf{64}}} \\ \cline{1-13}
+			\multicolumn{1}{|c|}{\textbf{Validation}} & \multicolumn{1}{c|}{0.164} & \multicolumn{1}{c|}{0.187} & \multicolumn{1}{c|}{0.285} & 0.309  & \multicolumn{1}{c|}{0.188} & \multicolumn{1}{c|}{0.146} & \multicolumn{1}{c|}{0.246} & 0.373  & \multicolumn{1}{c|}{0.147} & \multicolumn{1}{c|}{0.197} & \multicolumn{1}{c|}{0.219} & 0.392  & \multicolumn{1}{c|}{} \\ \cline{1-13}
+			\multicolumn{1}{|c|}{\textbf{Time [s]}} & \multicolumn{1}{c|}{1.633} & \multicolumn{1}{c|}{3.301} & \multicolumn{1}{c|}{8.857} & 17.934 & \multicolumn{1}{c|}{1.790} & \multicolumn{1}{c|}{2.998} & \multicolumn{1}{c|}{8.607} & 18.803 & \multicolumn{1}{c|}{1.670} & \multicolumn{1}{c|}{3.792} & \multicolumn{1}{c|}{8.796} & 17.307 & \multicolumn{1}{c|}{} \\ \hline
+			\multicolumn{1}{|c|}{\textbf{Training}} & \multicolumn{1}{c|}{0.048} & \multicolumn{1}{c|}{0.020} & \multicolumn{1}{c|}{0.008} & 0.002  & \multicolumn{1}{c|}{0.0446}  & \multicolumn{1}{c|}{0.022} & \multicolumn{1}{c|}{0.007} & 0.002  & \multicolumn{1}{c|}{0.045} & \multicolumn{1}{c|}{0.026} & \multicolumn{1}{c|}{0.008} & 0.003  & \multicolumn{1}{c|}{\multirow{3}{*}{\textbf{128}}}  \\ \cline{1-13}
+			\multicolumn{1}{|c|}{\textbf{Validation}} & \multicolumn{1}{c|}{0.150} & \multicolumn{1}{c|}{0.245} & \multicolumn{1}{c|}{0.279} & 0.416 & \multicolumn{1}{c|}{0.180} & \multicolumn{1}{c|}{0.221} & \multicolumn{1}{c|}{0.299} & 0.351  & \multicolumn{1}{c|}{0.174} & \multicolumn{1}{c|}{0.196} & \multicolumn{1}{c|}{0.295} & 0.410  & \multicolumn{1}{c|}{} \\ \cline{1-13}
+			\multicolumn{1}{|c|}{\textbf{Time [s]}} & \multicolumn{1}{c|}{1.994} & \multicolumn{1}{c|}{3.826} & \multicolumn{1}{c|}{9.305} & 19.006 & \multicolumn{1}{c|}{1.775} & \multicolumn{1}{c|}{3.622} & \multicolumn{1}{c|}{10.443}  & 20.756 & \multicolumn{1}{c|}{1.819} & \multicolumn{1}{c|}{4.382} & \multicolumn{1}{c|}{10.297}  & 19.298 & \multicolumn{1}{c|}{} \\ \hline
+		\end{tabular}
+	}
+	\caption{Neural network performance to learn robot positions from human skeleton data}
+	\label{tab:nn_results}
+\end{table}
+\end{frame}
+
+\begin{frame}{Human-Robot Mapping}
+	\framesubtitle{Simulation}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/simulation_all_robots.png}
+		\label{fig:simulation_teapot}
+		\caption{Simulated poses for two different actions, namely teapot and spoon. NN output for QTrobot (3 angles per arm, 2 angles for the head), NAO (5 angles per arm, 2 angles for the head) and Freddy (6 angles per arm)}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Path Planning}
+	\begin{minipage}{0.49\linewidth}	
+	\vspace{-2cm}
+	\begin{itemize}
+		\item For all moving joints (8 for QTrobot, 12 for NAO, 14 for Freddy)
+		\newline
+		\item Data collection rate: 30 $fps$
+		\newline
+		\item For real-time: 1 $sec$ $\equiv$ 1 $batch$	
+		\newline
+		\item Start and stop the demonstration with voice commands
+	\end{itemize}
+	\end{minipage}		
+	\begin{minipage}{0.49\linewidth}	
+		\begin{figure}[h!]
+		\includegraphics[width=0.8\textwidth]{images/path_planning/path_planning.png}
+		\caption{Repetitive action}
+	\end{figure}
+\end{minipage}
+\end{frame}
+
+\begin{frame}{Path Planning}
+	\begin{minipage}{0.32\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=1.07\textwidth]{images/path_planning/1_fork_right_4.png}
+			\caption{Regular end effector action}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.32\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/path_planning/2_dinner_plate_right_4.png}
+			\caption{Noisy action demonstration}
+		\end{figure}
+	\end{minipage}	
+	\begin{minipage}{0.32\linewidth}	
+	\begin{figure}[h!]
+		\includegraphics[width=1.15\textwidth]{images/path_planning/9_knife_right_4.png}
+		\caption{Repetitive action}
+	\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Path Planning is not perfect...}
+		\begin{minipage}{0.32\linewidth}
+			\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/path_planning/2_pressure_cooker_3.png}
+			\caption{Selection of $d_{min}$ of the graph bigger than required}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.32\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=1.025\textwidth]{images/path_planning/18_ladle_right.png}
+			\caption{Not enough babbling points or not explored workspace during babbling}
+		\end{figure}
+	\end{minipage}	
+	\begin{minipage}{0.32\linewidth}	
+	\begin{figure}[h!]
+		\includegraphics[width=1.05\textwidth]{images/path_planning/16_ladle_left9_freddy.png}
+		\caption{Path planning on the presence of an obstacle on the bottom}
+	\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Trajectory Learning}
+	For the 12 pre-recorded actions:
+	\newline
+	\begin{itemize}
+		\item Sklearn library for GMM and polynomial regression
+		\newline
+		\item Gaussian Mixture Regression from GMR open source [9]
+		\newline
+		\item Signal normalization to 1000 frames $\equiv$ 33.33 $sec$
+		\newline
+		\item Number of clusters 3 to 4 for simple actions and variable for repetitive actions
+		
+	\end{itemize}
+	
+\end{frame}
+
+\begin{frame}{Trajectory Learning}
+	\begin{minipage}{0.49\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/gmm/GMR_fork_left_6_150.pdf}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.49\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/gmm/GMR_knife_left_right_1_30.pdf}
+		\end{figure}	
+	\end{minipage}	
+\end{frame}
+
+\begin{frame}{Trajectory Learning is not perfect... either}	
+	\begin{minipage}{0.49\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/gmm/GMR_dinner_plate_right_4_150.pdf}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.49\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/gmm/GMR_teapot_right_head_2_150.pdf}
+		\end{figure}	
+	\end{minipage}	
+\end{frame}
+
+\begin{frame}{Obstacle Avoidance}
+	\begin{minipage}{0.33\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=1.03\textwidth]{images/path_planning/path_6spoon_left_end_effector_qt.png}
+			\caption{End effector path original path vs. repaired path for a blockage at the end effector level}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.32\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/path_planning/path_6spoon_left_joint_qt.png}
+			\caption{End effector path original vs. repaired for a blockage at a joint level}
+		\end{figure}
+	\end{minipage}	
+	\begin{minipage}{0.33\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/path_planning/path_6spoon_left_both_qt.png}
+			\caption{End effector path original vs. repaired for blockage at a joint level and the end effector}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{User Evaluation}
+	\framesubtitle{Demographics}
+		\vspace{-0.2cm}
+		\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.85\textwidth]{images/survey/demographics.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{User Evaluation}  
+	\hspace*{-0.25cm} 
+	\begin{minipage}{0.32\linewidth} 	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/survey/comparison_with_our_older_approach.pdf}
+			\caption{Question: "Which robot imitates the human more accurately in the 1st/2nd/3rd/4th/5th action?”}
+		\end{figure}
+	\end{minipage}
+	\hspace*{0.1cm}	
+	\begin{minipage}{0.32\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/survey/nao_performance.pdf}
+			\caption{Question: "How well did the robot reproduce the 1st/2nd/3rd/4th action?”}
+		\end{figure}
+	\end{minipage}
+	\hspace*{0.1cm} 	
+	\begin{minipage}{0.32\linewidth}	  
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/survey/qt_live_performance.pdf}
+			\caption{Questions: "How good was the shape of the robot?" and "How good was the speed of the robot?"}
+		\end{figure}
+	\end{minipage}		
+\end{frame}
+
+\begin{frame}{Contributions}	
+	\begin{itemize}
+		\item This work describes a framework to perform LfD for different robotic platforms
+		\newline
+		\item A single-layer neural network is used for mapping human to robot joint angles
+		\newline
+		\item Motor babbling to recognize the robot environment and store it as a set of graphs
+		\newline
+		\item Expand graphs and fix the actions by estimating new node and dependencies with Gauss-Newton minimization 
+		\newline
+		\item Each class is normalized and learned with Gaussian Mixture Regression
+
+	\end{itemize}
+ \end{frame}
+
+\begin{frame}{Contributions}	
+	We performed four evaluations to validate the results:
+	\newline
+	\begin{itemize}
+		\item Compared with other frameworks
+		\newline
+		\item Evaluation of the neural network robustness
+		\newline
+		\item Repairing learned trajectories when including static obstacles. We used $A^*$ search in order to find the closest possible shaped path
+		\newline
+		\item Survey: comparison with our previous approach with QTrobot, action reproduction on NAO and a live performance of QTrobot
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Future Work}
+	\begin{itemize}
+		\item Automatic pose labeling with digital twins [11]\blfootnote{[11] M. Dallel, et al. “Digital twin of an industrial workstation: A novel method of an auto-labeled data generator using virtual reality for human action recognition in the context of human–robot collaboration,” Engineering Applications of Artificial Intelligence, vol. 118, 2023} or Recurrent Neural Network [12] \blfootnote{[12] W. Qi, et al, “Multi-sensor guided hand gesture recognition for a teleoperated robot using a recurrent neural network,” IEEE Robotics and Automation Letters, vol. 6, no. 3, pp. 6039–6045, 2021}
+		\newline
+		\item Improve robot control by storing joint torque and velocity during babbling [12, 13] \blfootnote{[12] K. Takahashi, T. Ogata, H. Yamada, H. Tjandra, and S. Sugano, “Effective motion learning for a flexible-joint robot using motor babbling,” in IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2015, pp. 2723–2728}
+		\blfootnote{[13] T. Aoki, T. Nakamura, and T. Nagai, “Learning of motor control from motor babbling,” IFAC-Papers On Line, vol. 49, no. 19, pp. 154–158, 2016}
+		\newline
+		\item Implement an action classifier for trajectories with for example RNN [14] \blfootnote{[14] L. May Petry, et al. “Marc: a robust method for multiple-aspect trajectory classification via space, time, and semantic embeddings,” International Journal of Geographical Information Science, vol. 34, no. 7, pp. 1428–1450, 2020}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Future Work}
+	\begin{itemize}
+		\item Extend to dynamic and real-time interactions with movable objects
+		\newline
+		\item Implement “learn to forget”, for removing unused nodes following the concept of continual learning [15] \blfootnote{[15] T. Lesort, et al. “Continual learning for robotics: Definition, framework, learning strategies, opportunities and challenges,” Information fusion, vol. 58, pp. 52–68, 2020}
+	\end{itemize}
+\end{frame}
+
+
+\frame{
+	\frametitle{Real-Time Prediction}
+	\framesubtitle{QTrobot}
+	\begin{center}
+		\movie{\includegraphics[width=0.8\textwidth]{images/qt-spoon.png}}{videos/survey_video_part3.mp4}
+	\end{center}
+}
+
+\begin{frame}
+	Thank you for your attention
+	
+\end{frame}
+
+\begin{frame}{State of the Art}
+	\begin{minipage}{0.49\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/lightning_framework.png}
+			\caption{Lightning framework overview (Taken from [6])}
+			\label{fig:qt_joint_references}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.49\linewidth}			
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/thunder_framework.png}
+			\caption{Thunder framework overview (Taken from [7])}
+			\label{fig:qt_joint_references}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Robot Representation}
+	\begin{minipage}{0.32\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=1.1\textwidth]{images/qt_joint_references.pdf}
+			\caption{Joint representation of QTrobot}
+			\label{fig:qt_joint_references}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.32\linewidth}	
+		
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/freddy_joint_references.pdf}
+			\caption{Joint representation of Freddy}
+			\label{fig:qt_joint_references}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.32\linewidth}	
+		\begin{figure}[h!]
+			\includegraphics[width=1.1\textwidth]{images/nao_joint_references.pdf}
+			\caption{Joint representation of NAO}
+			\label{fig:qt_joint_references}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Adding a New Node}
+	\framesubtitle{Constraints}
+		\vspace{-0.1cm}
+		\begin{figure}[h!]
+			\includegraphics[width=0.8\textwidth]{images/query_ball_rep.png}
+			\caption{Choosing a neighbor to estimate the new node dependencies}
+		\end{figure}
+\end{frame}
+
+\begin{frame}{Human-Robot Mapping}
+	\framesubtitle{Pose Learning}
+	\vspace{-0.2cm}
+	\begin{minipage}{0.5\linewidth}
+		\begin{figure}[h]
+			\includegraphics[width=0.7\linewidth]{images/loss_pose_learning_qt_16.png}
+		\end{figure}
+		\vspace{-0.6cm}
+		\begin{figure}[h]
+			\includegraphics[width=0.7\linewidth]{images/loss_pose_learning_nao_16.png}
+		\end{figure}
+	\end{minipage}\hfill	
+	\begin{minipage}{0.5\linewidth}	
+		\begin{figure}[h]
+			\includegraphics[width=0.7\linewidth]{images/loss_pose_learning_freddy_16.png}
+		\end{figure}
+		\begin{table}[!b]
+			\small
+			\begin{tabular}{||c|c|c||}
+				\hline
+				Robot        &  MSE Loss  & Validation Loss    \\ \hline
+				QTrobot      &   0.128    & 	0.137  		   \\ \hline
+				Freddy 	     &   1.394    & 	1.499 	 	   \\ \hline
+				NAO			 &   0.295    & 	0.337  		   \\ \hline
+			\end{tabular}
+			\caption {}
+		\end{table}
+	\end{minipage}
+\end{frame}
+
+\begin{frame}{Trajectory Learning}
+	\begin{minipage}{0.49\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/gmm/GMR_shallow_plate_left_5_150.pdf}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.49\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=0.9\textwidth]{images/gmm/GMR_shallow_plate_left_1_100.pdf}
+		\end{figure}
+	\end{minipage}	
+\end{frame}
+
+\begin{frame}{Obstacle Avoidance}
+	\begin{minipage}{0.33\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/path_planning/path_6spoon_left_end_effector_qt.png}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.66\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=1.025\textwidth]{images/path_planning/repair_6spoon_left_end_effector_qt.png}
+		\end{figure}
+	\end{minipage}
+	End effector trajectory and angle comparison QTrobot original path vs. repaired path for a blockage at the end effector
+\end{frame}
+
+\begin{frame}{Obstacle Avoidance}
+	\begin{minipage}{0.33\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/path_planning/path_6spoon_left_joint_qt.png}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.66\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=1.025\textwidth]{images/path_planning/repair_6spoon_left_joint_qt.png}
+		\end{figure}
+	\end{minipage}
+	End effector trajectory and angle comparison QTrobot original path vs. repaired path for a blockage at the 3th joint level
+\end{frame}
+
+\begin{frame}{Obstacle Avoidance}
+	\begin{minipage}{0.33\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=\textwidth]{images/path_planning/path_6spoon_left_both_qt.png}
+		\end{figure}
+	\end{minipage}		
+	\begin{minipage}{0.66\linewidth}
+		\centering	
+		\begin{figure}[h!]
+			\includegraphics[width=1.025\textwidth]{images/path_planning/repair_6spoon_left_both_qt.png}
+		\end{figure}
+	\end{minipage}
+	End effector trajectory and angle comparison QTrobot original path vs. repaired path for a  blockage at the 3th joint level and the end effector
+\end{frame}
+
+\end{document}
